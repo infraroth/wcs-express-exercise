@@ -27,7 +27,7 @@ usersRouter.get('/:id', (req, res) => {
 
 usersRouter.post('/', (req, res) => {
   const errors = [];
-  const { firstname, lastname, email, city, language } = req.body;
+  const { firstname, lastname, email, city, language, password } = req.body;
   const emailRegex = /[a-z0-9._]+@[a-z0-9-]+\.[a-z]{2,3}/;
   if (!emailRegex.test(email))
     errors.push({ field: 'email', message: 'Invalid email' });
@@ -39,6 +39,10 @@ usersRouter.post('/', (req, res) => {
     errors.push({ field: 'lastname', message: 'This field is required' });
   if (!email)
     errors.push({ field: 'email', message: 'This field is required' });
+  if (!password)
+    errors.push({ field: 'plainPassword', message: 'This field is required' });
+  else if (password.length < 8)
+    errors.push({ field: 'plainPassword', message: 'Should contain more than 8 characters' });
   if (city.length >= 255)
     errors.push({ field: 'city', message: 'Should contain less than 255 characters' });
   if (language.length >= 255)

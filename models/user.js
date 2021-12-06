@@ -1,27 +1,45 @@
 const connection = require('../db-config');
+const argon2 = require('argon2');
+
+const hashingOptions = {
+  type: argon2.argon2id,
+  memoryCost: 2 ** 16,
+  timeCost: 5,
+  parallelism: 1
+};
+
+const hashPassword = (plainPassword) => {
+  return argon2.hash(plainPassword, hashingOptions);
+};
+
+const verifyPassword = (plainPassword, hashedPassword) => {
+  return argon2.verify(hashedPassword, plainPassword, hashingOptions);
+};
 
 const db = connection.promise();
 
 const findMany = ({ filters: { language } }) => {
-  let sql = 'SELECT * FROM users';
+  let sql = 'SELECT firstname, lastname, email, city, language FROM users';
   const sqlValues = [];
   if (language) {
     sql += ' WHERE language = ?';
     sqlValues.push(language);
   }
-
   return db.query(sql, sqlValues).then(([results]) => results);
 };
 
 const findOne = (id) => {
-  return db.query('SELECT * FROM users WHERE id = ?', [id])
+  return db.query('SELECT firstname, lastname, email, city, language FROM users WHERE id = ?', [id])
   .then(([results]) => results[0]);
 };
 
-const createOne = (user) => {
-  return db.query('INSERT INTO users SET ?', user).then(([result]) => {
-    const id = result.insertId;
-    return { ...user, id };
+const createOne = ({ firstname, lastname, city, language, email, password }) => {
+  return hashPassword(password).then((hashedPassword) => {
+    return db.query('INSERT INTO users SET ?', {firstname, lastname, city, language, email, hashedPassword })
+      .then(([result]) => {
+        const id = result.insertId;
+        return { id, firstname, lastname, city, language, email };
+      });
   });
 };
 
@@ -34,6 +52,8 @@ const deleteUser = (id) => {
 };
 
 module.exports = {
+  hashPassword,
+  verifyPassword,
   findMany,
   findOne,
   createOne,
