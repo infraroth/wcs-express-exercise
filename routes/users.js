@@ -64,23 +64,39 @@ usersRouter.post('/', (req, res) => {
 usersRouter.put('/:id', (req, res) => {
   let existingUser = null;
   const errors = [];
+  const userUpdates = {};
   User.findOne(req.params.id)
     .then((user) => {
-      const { firstname, city, language, password } = req.body;
+      const { firstname, lastname, email, city, language, password } = req.body;
       existingUser = user;
       if (firstname !== undefined && firstname.length >= 255)
         errors.push({ field: 'firstname', message: 'Should contain less than 255 characters' });
+      if (firstname) userUpdates.firstname = firstname;
+      if (lastname !== undefined && lastname.length >= 255)
+        errors.push({ field: 'lastname', message: 'Should contain less than 255 characters' });
+      if (lastname) userUpdates.lastname = lastname;
+      const emailRegex = /[a-z0-9._]+@[a-z0-9-]+\.[a-z]{2,3}/;
+      if (email !== undefined && !emailRegex.test(email))
+        errors.push({ field: 'email', message: 'Invalid email' });
+      if (email) userUpdates.email = email;
       if (city !== undefined && city.length >= 255)
         errors.push({ field: 'city', message: 'Should contain less than 255 characters' });
+      if (city) userUpdates.city = city;
       if (language !== undefined && language.length >= 255)
         errors.push({ field: 'language', message: 'Should contain less than 255 characters' });
+      if (language) userUpdates.language = language;
       if (password !== undefined && password.length < 8)
         errors.push({ field: 'password', message: 'Should contain more than 8 characters' });
+      if (password) {
+        return User.hashPassword(password).then((hashedPassword) => {
+          userUpdates.hashedPassword = hashedPassword;
+        });
+      }
       if (errors.length) return Promise.reject('INVALID_DATA');
-      return User.updateOne(req.params.id, req.body);
+      return User.updateOne(req.params.id, userUpdates);
     })
     .then(() => {
-      res.status(200).json({ ...existingUser, ...req.body });
+      res.status(200).json('User successfully updated.')
     })
     .catch((err) => {
       console.error(err);

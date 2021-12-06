@@ -48,10 +48,8 @@ const createOne = ({ firstname, lastname, city, language, email, password }) => 
   });
 };
 
-const updateOne = (id, {userUpdates, password}) => {
-  return hashPassword(password).then((hashedPassword) => {
-    return db.query('UPDATE users SET ? WHERE id = ?', [{...userUpdates, hashedPassword}, id]);
-  });
+const updateOne = (id, userUpdates) => {
+  return db.query('UPDATE users SET ? WHERE id = ?', [userUpdates, id]);
 };
 
 const deleteUser = (id) => {
