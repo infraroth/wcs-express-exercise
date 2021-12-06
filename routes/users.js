@@ -40,9 +40,9 @@ usersRouter.post('/', (req, res) => {
   if (!email)
     errors.push({ field: 'email', message: 'This field is required' });
   if (!password)
-    errors.push({ field: 'plainPassword', message: 'This field is required' });
+    errors.push({ field: 'password', message: 'This field is required' });
   else if (password.length < 8)
-    errors.push({ field: 'plainPassword', message: 'Should contain more than 8 characters' });
+    errors.push({ field: 'password', message: 'Should contain more than 8 characters' });
   if (city.length >= 255)
     errors.push({ field: 'city', message: 'Should contain less than 255 characters' });
   if (language.length >= 255)
@@ -66,7 +66,7 @@ usersRouter.put('/:id', (req, res) => {
   const errors = [];
   User.findOne(req.params.id)
     .then((user) => {
-      const { firstname, city, language } = req.body;
+      const { firstname, city, language, password } = req.body;
       existingUser = user;
       if (firstname !== undefined && firstname.length >= 255)
         errors.push({ field: 'firstname', message: 'Should contain less than 255 characters' });
@@ -74,6 +74,8 @@ usersRouter.put('/:id', (req, res) => {
         errors.push({ field: 'city', message: 'Should contain less than 255 characters' });
       if (language !== undefined && language.length >= 255)
         errors.push({ field: 'language', message: 'Should contain less than 255 characters' });
+      if (password !== undefined && password.length < 8)
+        errors.push({ field: 'password', message: 'Should contain more than 8 characters' });
       if (errors.length) return Promise.reject('INVALID_DATA');
       return User.updateOne(req.params.id, req.body);
     })

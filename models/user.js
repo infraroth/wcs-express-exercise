@@ -43,8 +43,10 @@ const createOne = ({ firstname, lastname, city, language, email, password }) => 
   });
 };
 
-const updateOne = (id, userInfo) => {
-  return db.query('UPDATE users SET ? WHERE id = ?', [userInfo, id]);
+const updateOne = (id, { firstname, lastname, city, language, email, password }) => {
+  return hashPassword(password).then((hashedPassword) => {
+    return db.query('UPDATE users SET firstname = ?, lastname = ?, city = ?, language = ?, email = ?, hashedPassword = ? WHERE id = ?', [firstname, lastname, city, language, email, hashedPassword, id]);
+  });
 };
 
 const deleteUser = (id) => {
