@@ -93,7 +93,9 @@ usersRouter.put('/:id', (req, res) => {
         });
       }
       if (errors.length) return Promise.reject('INVALID_DATA');
-      return User.updateOne(req.params.id, userUpdates);
+    })
+    .then(() => {
+      User.updateOne(req.params.id, userUpdates);
     })
     .then(() => {
       res.status(200).json('User successfully updated.')
