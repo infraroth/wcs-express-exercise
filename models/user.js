@@ -33,6 +33,11 @@ const findOne = (id) => {
   .then(([results]) => results[0]);
 };
 
+const findOneByEmail = (email) => {
+  return db.query('SELECT * FROM users WHERE email = ?', [email])
+  .then(([results]) => results[0]);
+};
+
 const createOne = ({ firstname, lastname, city, language, email, password }) => {
   return hashPassword(password).then((hashedPassword) => {
     return db.query('INSERT INTO users SET ?', {firstname, lastname, city, language, email, hashedPassword })
@@ -45,7 +50,7 @@ const createOne = ({ firstname, lastname, city, language, email, password }) => 
 
 const updateOne = (id, { firstname, lastname, city, language, email, password }) => {
   return hashPassword(password).then((hashedPassword) => {
-    return db.query('UPDATE users SET firstname = ?, lastname = ?, city = ?, language = ?, email = ?, hashedPassword = ? WHERE id = ?', [firstname, lastname, city, language, email, hashedPassword, id]);
+    return db.query('UPDATE users SET ? WHERE id = ?', [{firstname, lastname, city, language, email, hashedPassword}, id]);
   });
 };
 
@@ -58,6 +63,7 @@ module.exports = {
   verifyPassword,
   findMany,
   findOne,
+  findOneByEmail,
   createOne,
   updateOne,
   deleteUser
