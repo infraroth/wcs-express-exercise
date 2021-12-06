@@ -28,9 +28,9 @@ const findMany = ({ filters: { language } }) => {
   return db.query(sql, sqlValues).then(([results]) => results);
 };
 
-const findOne = (id) => {
-  return db.query('SELECT firstname, lastname, email, city, language FROM users WHERE id = ?', [id])
-  .then(([results]) => results[0]);
+const findOne = async (id) => {
+  const [results] = await db.query('SELECT firstname, lastname, email, city, language FROM users WHERE id = ?', [id]);
+  return results[0];
 };
 
 const findOneByEmail = (email) => {
@@ -48,9 +48,9 @@ const createOne = ({ firstname, lastname, city, language, email, password }) => 
   });
 };
 
-const updateOne = (id, { firstname, lastname, city, language, email, password }) => {
+const updateOne = (id, {userUpdates, password}) => {
   return hashPassword(password).then((hashedPassword) => {
-    return db.query('UPDATE users SET ? WHERE id = ?', [{firstname, lastname, city, language, email, hashedPassword}, id]);
+    return db.query('UPDATE users SET ? WHERE id = ?', [{...userUpdates, hashedPassword}, id]);
   });
 };
 
