@@ -1,5 +1,14 @@
 const moviesRouter = require('express').Router();
 const Movie = require('../models/movie');
+const User = require('../models/user');
+
+moviesRouter.get('/', (req, res) => {
+  User.findOneByToken(req.cookies['user_token']).then((user) => {
+    User.findUserMovies(user.id).then((movies) => {
+      res.send(movies)
+    }).catch(() => res.status(500).send('Error retrieving movies from database'))
+  }).catch(()=>res.status(401).send('You are not allowed to post a movie'))
+});
 
 moviesRouter.get('/', (req, res) => {
   const { max_duration, color } = req.query;
@@ -29,42 +38,46 @@ moviesRouter.get('/:id', (req, res) => {
 });
 
 moviesRouter.post('/', (req, res) => {
-  const errors = [];
-  const { title, director, year, color, duration } = req.body;
-  if (!title)
-    errors.push({ field: 'title', message: 'This field is required' });
-  else if (title.length >= 255)
-    errors.push({ field: 'title', message: 'Should contain less than 255 characters' });
-  if (!director)
-    errors.push({ field: 'director', message: 'This field is required' });
-  else if (director.length >= 255)
-    errors.push({ field: 'director', message: 'Should contain less than 255 characters' });
-  if (!year)
-    errors.push({ field: 'year', message: 'This field is required' });
-  else if (year <= 1888 || !Number.isInteger(year))
-    errors.push({ field: 'year', message: 'Needs to be from 1889 or after' });
-  else if (!Number.isInteger(year))
-    errors.push({ field: 'year', message: 'Needs to be a number' });
-  if (!color)
-    errors.push({ field: 'color', message: 'This field is required' });
-  else if (color >= 2 || !Number.isInteger(color))
-    errors.push({ field: 'color', message: 'Needs to be 0 or 1' });
-  if (!duration)
-    errors.push({ field: 'duration', message: 'This field is required' });
-  else if (duration <= 0 || !Number.isInteger(duration))
-    errors.push({ field: 'duration', message: 'Needs to be a number greater than 0' });
-  if (errors.length) {
-    res.status(422).json({ validationErrors: errors });
-  } else {
-    Movie.createOne(req.body)
-      .then((createdMovie) => {
-        res.status(201).json(createdMovie);
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).send('Error saving the movie');
-      });
-  }
+  User.findOneByToken(req.cookies['user_token'])
+    .then((user) => {
+      const errors = [];
+      const { title, director, year, color, duration } = req.body;
+      if (!title)
+        errors.push({ field: 'title', message: 'This field is required' });
+      else if (title.length >= 255)
+        errors.push({ field: 'title', message: 'Should contain less than 255 characters' });
+      if (!director)
+        errors.push({ field: 'director', message: 'This field is required' });
+      else if (director.length >= 255)
+        errors.push({ field: 'director', message: 'Should contain less than 255 characters' });
+      if (!year)
+        errors.push({ field: 'year', message: 'This field is required' });
+      else if (year <= 1888 || !Number.isInteger(year))
+        errors.push({ field: 'year', message: 'Needs to be from 1889 or after' });
+      else if (!Number.isInteger(year))
+        errors.push({ field: 'year', message: 'Needs to be a number' });
+      if (!color)
+        errors.push({ field: 'color', message: 'This field is required' });
+      else if (color >= 2 || !Number.isInteger(color))
+        errors.push({ field: 'color', message: 'Needs to be 0 or 1' });
+      if (!duration)
+        errors.push({ field: 'duration', message: 'This field is required' });
+      else if (duration <= 0 || !Number.isInteger(duration))
+        errors.push({ field: 'duration', message: 'Needs to be a number greater than 0' });
+      if (errors.length) {
+        res.status(422).json({ validationErrors: errors });
+      } else {
+        Movie.createOne({ ...req.body, user_id: user.id })
+          .then((createdMovie) => {
+            res.status(201).json(createdMovie);
+          })
+          .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error saving the movie');
+          });
+      }
+    }
+    ).catch(() => { res.status(401).send('You are not allowed to post a movie'); })
 });
 
 moviesRouter.put('/:id', (req, res) => {

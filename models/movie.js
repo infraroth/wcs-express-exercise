@@ -25,13 +25,13 @@ const findOne = (id) => {
   .then(([results]) => results[0]);
 };
 
-const createOne = ({ title, director, year, color, duration }) => {
+const createOne = ({ title, director, year, color, duration, user_id }) => {
   return db.query(
-      'INSERT INTO movies (title, director, year, color, duration) VALUES (?, ?, ?, ?, ?)',
-      [title, director, year, color, duration]
+      'INSERT INTO movies (title, director, year, color, duration, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [title, director, year, color, duration, user_id]
     ).then(([result]) => {
       const id = result.insertId;
-      return { id, title, director, year, color, duration };
+      return { id, title, director, year, color, duration, user_id };
     });
 };
 

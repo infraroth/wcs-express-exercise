@@ -28,6 +28,11 @@ const findMany = ({ filters: { language } }) => {
   return db.query(sql, sqlValues).then(([results]) => results);
 };
 
+const findUserMovies = (user_id) => {
+  return db.query('SELECT * FROM movies WHERE user_id = ?', [user_id])
+  .then(([results]) => results);
+};
+
 const findOne = (id) => {
   return db.query('SELECT firstname, lastname, email, city, language FROM users WHERE id = ?', [id])
   .then(([results]) => results[0]);
@@ -38,9 +43,14 @@ const findOneByEmail = (email) => {
   .then(([results]) => results[0]);
 };
 
-const createOne = ({ firstname, lastname, city, language, email, password }) => {
+const findOneByToken = (token) => {
+  return db.query('SELECT * FROM users WHERE token = ?', [token])
+  .then(([results]) => results[0]);
+};
+
+const createOne = ({ firstname, lastname, city, language, email, password, token }) => {
   return hashPassword(password).then((hashedPassword) => {
-    return db.query('INSERT INTO users SET ?', {firstname, lastname, city, language, email, hashedPassword })
+    return db.query('INSERT INTO users SET ?', {firstname, lastname, city, language, email, hashedPassword, token })
       .then(([result]) => {
         const id = result.insertId;
         return { id, firstname, lastname, city, language, email };
@@ -60,8 +70,10 @@ module.exports = {
   hashPassword,
   verifyPassword,
   findMany,
+  findUserMovies,
   findOne,
   findOneByEmail,
+  findOneByToken,
   createOne,
   updateOne,
   deleteUser
