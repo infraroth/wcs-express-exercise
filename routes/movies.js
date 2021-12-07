@@ -56,7 +56,7 @@ moviesRouter.post('/', (req, res) => {
         errors.push({ field: 'year', message: 'Needs to be from 1889 or after' });
       else if (!Number.isInteger(year))
         errors.push({ field: 'year', message: 'Needs to be a number' });
-      if (!color)
+      if (color == undefined)
         errors.push({ field: 'color', message: 'This field is required' });
       else if (color >= 2 || !Number.isInteger(color))
         errors.push({ field: 'color', message: 'Needs to be 0 or 1' });
