@@ -43,11 +43,7 @@ usersRouter.post('/', (req, res) => {
   else newUser.lastname = lastname;
   if (!email)
     errors.push({ field: 'email', message: 'This field is required' });
-  else {
-    newUser.email = email;
-    const token = calculateToken(email);
-    newUser.token = token;
-  }
+  else newUser.email = email;
   if (!password)
     errors.push({ field: 'password', message: 'This field is required' });
   else if (password.length < 8)
@@ -62,9 +58,10 @@ usersRouter.post('/', (req, res) => {
   if (errors.length) {
     res.status(422).json({ validationErrors: errors });
   } else {
-    res.cookie('user_token', newUser.token)
     User.createOne(newUser)
       .then((createdUser) => {
+        const token = calculateToken(email, createdUser.id);
+        res.cookie('user_token', token)
         res.status(201).json(createdUser);
       })
       .catch((err) => {
@@ -93,8 +90,8 @@ usersRouter.put('/:id', (req, res) => {
         errors.push({ field: 'email', message: 'Invalid email' });
       if (email) {
         userUpdates.email = email;
-        const token = calculateToken(email);
-        userUpdates.token = token;
+        const token = calculateToken(email, req.params.id);
+        //userUpdates.token = token;
         res.cookie('user_token', token);
       };
       if (city !== undefined && city.length >= 255)
