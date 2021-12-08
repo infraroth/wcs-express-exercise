@@ -53,7 +53,7 @@ usersRouter.post('/', (req, res) => {
       if (errors.length) {
         res.status(422).json({ validationErrors: errors });
       } else {
-        return User.createOne(newUser);
+        return User.createOne(req.body);
       }
     })
     .then((createdUser) => {
