@@ -28,37 +28,42 @@ usersRouter.get('/:id', (req, res) => {
 usersRouter.post('/', (req, res) => {
   const errors = [];
   const { firstname, lastname, email, city, language, password } = req.body;
-  const emailRegex = /[a-z0-9._]+@[a-z0-9-]+\.[a-z]{2,3}/;
-  if (!emailRegex.test(email))
-    errors.push({ field: 'email', message: 'Invalid email' });
-  if (!firstname)
-    errors.push({ field: 'firstname', message: 'This field is required' });
-  else if (firstname.length >= 255)
-    errors.push({ field: 'firstname', message: 'Should contain less than 255 characters' });
-  if (!lastname)
-    errors.push({ field: 'lastname', message: 'This field is required' });
-  if (!email)
-    errors.push({ field: 'email', message: 'This field is required' });
-  if (!password)
-    errors.push({ field: 'password', message: 'This field is required' });
-  else if (password.length < 8)
-    errors.push({ field: 'password', message: 'Should contain more than 8 characters' });
-  if (city.length >= 255)
-    errors.push({ field: 'city', message: 'Should contain less than 255 characters' });
-  if (language.length >= 255)
-    errors.push({ field: 'language', message: 'Should contain less than 255 characters' });
-  if (errors.length) {
-    res.status(422).json({ validationErrors: errors });
-  } else {
-    User.createOne(req.body)
-      .then((createdUser) => {
-        res.status(201).json(createdUser);
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).send('Error saving user');
-      });
-  }
+  User.findOneByEmail(email)
+    .then((emailExists) => {
+      if (emailExists) return Promise.reject('DUPLICATE_EMAIL');
+      const emailRegex = /[a-z0-9._]+@[a-z0-9-]+\.[a-z]{2,3}/;
+      if (!emailRegex.test(email))
+        errors.push({ field: 'email', message: 'Invalid email' });
+      if (!firstname)
+        errors.push({ field: 'firstname', message: 'This field is required' });
+      else if (firstname.length >= 255)
+        errors.push({ field: 'firstname', message: 'Should contain less than 255 characters' });
+      if (!lastname)
+        errors.push({ field: 'lastname', message: 'This field is required' });
+      if (!email)
+        errors.push({ field: 'email', message: 'This field is required' });
+      if (!password)
+        errors.push({ field: 'password', message: 'This field is required' });
+      else if (password.length < 8)
+        errors.push({ field: 'password', message: 'Should contain more than 8 characters' });
+      if (city.length >= 255)
+        errors.push({ field: 'city', message: 'Should contain less than 255 characters' });
+      if (language.length >= 255)
+        errors.push({ field: 'language', message: 'Should contain less than 255 characters' });
+      if (errors.length) {
+        res.status(422).json({ validationErrors: errors });
+      } else {
+        return User.createOne(newUser);
+      }
+    })
+    .then((createdUser) => {
+      res.status(201).json(createdUser);
+    })
+    .catch((err) => {
+      if (err === 'DUPLICATE_EMAIL')
+        res.status(409).send('Email already used');
+      else res.status(500).send('Error saving user');
+    });
 });
 
 usersRouter.put('/:id', (req, res) => {
