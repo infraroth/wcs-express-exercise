@@ -30,50 +30,48 @@ usersRouter.post('/', (req, res) => {
   const errors = [];
   const newUser = {};
   const { firstname, lastname, email, city, language, password } = req.body;
-  User.findOneByEmail(email)
-    .then((emailExists) => {
-      if (emailExists) return Promise.reject('DUPLICATE_EMAIL');
-      const emailRegex = /[a-z0-9._]+@[a-z0-9-]+\.[a-z]{2,3}/;
-      if (!emailRegex.test(email))
-        errors.push({ field: 'email', message: 'Invalid email' });
-      if (!firstname)
-        errors.push({ field: 'firstname', message: 'This field is required' });
-      else if (firstname.length >= 255)
-        errors.push({ field: 'firstname', message: 'Should contain less than 255 characters' });
-      else newUser.firstname = firstname;
-      if (!lastname)
-        errors.push({ field: 'lastname', message: 'This field is required' });
-      else newUser.lastname = lastname;
-      if (!email)
-        errors.push({ field: 'email', message: 'This field is required' });
-      else newUser.email = email;
-      if (!password)
-        errors.push({ field: 'password', message: 'This field is required' });
-      else if (password.length < 8)
-        errors.push({ field: 'password', message: 'Should contain more than 8 characters' });
-      else newUser.password = password;
-      if (city.length >= 255)
-        errors.push({ field: 'city', message: 'Should contain less than 255 characters' });
-      if (city) newUser.city = city;
-      if (language.length >= 255)
-        errors.push({ field: 'language', message: 'Should contain less than 255 characters' });
-      if (language) newUser.language = language;
-      if (errors.length) {
-        res.status(422).json({ validationErrors: errors });
-      } else {
+  const emailRegex = /[a-z0-9._]+@[a-z0-9-]+\.[a-z]{2,3}/;
+  if (!emailRegex.test(email))
+    errors.push({ field: 'email', message: 'Invalid email' });
+  if (!firstname)
+    errors.push({ field: 'firstname', message: 'This field is required' });
+  else if (firstname.length >= 255)
+    errors.push({ field: 'firstname', message: 'Should contain less than 255 characters' });
+  else newUser.firstname = firstname;
+  if (!lastname)
+    errors.push({ field: 'lastname', message: 'This field is required' });
+  else newUser.lastname = lastname;
+  if (!email)
+    errors.push({ field: 'email', message: 'This field is required' });
+  else newUser.email = email;
+  if (!password)
+    errors.push({ field: 'password', message: 'This field is required' });
+  else if (password.length < 8)
+    errors.push({ field: 'password', message: 'Should contain more than 8 characters' });
+  else newUser.password = password;
+  if (city !== undefined && city.length >= 255)
+    errors.push({ field: 'city', message: 'Should contain less than 255 characters' });
+  if (city !== undefined) newUser.city = city;
+  if (language !== undefined && language.length >= 255)
+    errors.push({ field: 'language', message: 'Should contain less than 255 characters' });
+  if (language !== undefined) newUser.language = language;
+  if (errors.length) {
+    res.status(422).json({ validationErrors: errors });
+  } else {
+    User.findOneByEmail(email)
+      .then((emailExists) => {
+        if (emailExists) return Promise.reject('DUPLICATE_EMAIL');
         return User.createOne(newUser);
-      }
-    })
-    .then((createdUser) => {
-      const token = calculateToken(email, createdUser.id);
-      res.cookie('user_token', token)
-      res.status(201).json(createdUser);
-    })
-    .catch((err) => {
-      if (err === 'DUPLICATE_EMAIL')
-        res.status(409).send('Email already used');
-      else res.status(500).send('Error saving user');
-    });
+      }).then((createdUser) => {
+        const token = calculateToken(createdUser.email, createdUser.id);
+        res.cookie('user_token', token)
+        res.status(201).json(createdUser);
+      }).catch((err) => {
+        if (err === 'DUPLICATE_EMAIL')
+          res.status(409).send('Email already used');
+        else res.status(500).send('Error saving user');
+      });
+  }
 });
 
 usersRouter.put('/:id', (req, res) => {
